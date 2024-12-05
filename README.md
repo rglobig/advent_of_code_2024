@@ -10,6 +10,7 @@ Advent of Code is a great way to:
 - Sharpen problem-solving and coding skills.
 - Learn new programming techniques.
 - Join a worldwide community of enthusiasts sharing the same passion.
+- **Enjoy funny memes** in the [Advent of Code subreddit](https://www.reddit.com/r/adventofcode) — because coding and laughter go hand in hand! 😄
 
 ## My Goals
 
