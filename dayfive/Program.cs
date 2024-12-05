@@ -1,8 +1,12 @@
-﻿var input = File.ReadAllLines("input.txt");
+﻿using System.Text;
+
+var input = File.ReadAllLines("input.txt");
 
 List<Rule> rules = [];
 List<Update> updates = [];
+
 var flip = false;
+
 foreach (var line in input)
 {
     if (string.IsNullOrWhiteSpace(line))
@@ -14,13 +18,13 @@ foreach (var line in input)
     if (!flip)
         rules.Add(CreateRule(line));
     else
-    {
         updates.Add(CreateUpdate(line));
-    }
-
 }
 
-new PartOne().CalculateAndPrint(rules, updates);
+List<Update> incorrectUpdates;
+
+new PartOne().CalculateAndPrint(rules, updates, out incorrectUpdates);
+new PartTwo().CalculateAndPrint(rules, incorrectUpdates);
 
 Rule CreateRule(string line)
 {
@@ -36,5 +40,12 @@ Update CreateUpdate(string line)
     return new Update(sequence);
 }
 
-record Rule(int left, int right);
-record Update(List<int> sequence);
+record Rule(int Left, int Right);
+record Update(List<int> Sequence)
+{
+    protected virtual bool PrintMembers(StringBuilder stringBuilder)
+    {
+        stringBuilder.Append("Sequence = " + string.Join(",", Sequence));
+        return true;
+    }
+}
