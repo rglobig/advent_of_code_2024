@@ -55,15 +55,14 @@ foreach (var match in commands)
 {
     var command = match.Value;
 
-    if (command is DoCommand || command is DontCommand DontCommand)
+    if (command is DoCommand || command is DontCommand)
     {
         last = command;
         continue;
     }
 
-    if(command is MultiplyCommand && last is DoCommand)
+    if(command is MultiplyCommand mul && last is DoCommand)
     {
-        var mul = command as MultiplyCommand;
         var result = mul.x * mul.y;
         WriteLine("Command is active: " + mul);
         WriteLine("Result: " + result);
