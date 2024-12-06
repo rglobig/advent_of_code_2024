@@ -3,6 +3,7 @@
     public static readonly char GuardSymbol = '^';
     public static readonly char EmptySymbol = '.';
     public static readonly char VisitedSymbol = 'X';
+    public static readonly char BlockingSymbol = '#';
 
     public static Position MoveGuard(char[,] map, Guard guard)
     {
