@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.HighPerformance;
+using System.Diagnostics;
 using static Helper;
 
 static class PartTwo
@@ -14,7 +15,12 @@ static class PartTwo
 
         if (!PositionIsValid(map, startPosition)) throw new Exception("Guard not found");
 
-        Parallel.For(0, map.Width, x =>
+        var parallelOptions = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 4
+        };
+
+        Parallel.For(0, map.Width, parallelOptions, x =>
         {
             for (int y = 0; y < map.Height; y++)
             {
