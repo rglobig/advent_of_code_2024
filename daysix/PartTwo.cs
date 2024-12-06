@@ -15,21 +15,26 @@ static class PartTwo
 
         if (!PositionIsValid(map, startPosition)) throw new Exception("Guard not found");
 
-        for (int x = 0; x < map.GetLength(0); x++)
+        object lockObject = new();
+        Parallel.For(0, map.GetLength(0), x =>
         {
             for (int y = 0; y < map.GetLength(1); y++)
             {
-                if (map[x, y] == GuardSymbol) continue;
-                if (map[x, y] == BlockingSymbol) continue;
-                
-                map[x, y] = BlockingSymbol;
+                if (map[x, y] == GuardSymbol || map[x, y] == BlockingSymbol) continue;
 
-                var found = FindLoop(map, startPosition);
-                if(found) loops++;
+                var mapCopy = (char[,])map.Clone();
+                mapCopy[x, y] = BlockingSymbol;
+                var found = FindLoop(mapCopy, startPosition);
 
-                map[x, y] = EmptySymbol;
+                if (found)
+                {
+                    lock (lockObject)
+                    {
+                        loops++;
+                    }
+                }
             }
-        }
+        });
 
         Console.WriteLine($"Found Loops: {loops}");
         Console.WriteLine("======================");
@@ -39,7 +44,7 @@ static class PartTwo
     {
         var guard = new Guard { Position = startPosition, Direction = new(0, -1) };
 
-        HashSet<(Position, Direction)> visited = [];
+        HashSet<(Position, Direction)> visited = new();
 
         Position nextPosition;
 
