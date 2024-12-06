@@ -1,4 +1,5 @@
-﻿using static Helper;
+﻿using CommunityToolkit.HighPerformance;
+using static Helper;
 
 static class PartTwo
 {
@@ -7,32 +8,21 @@ static class PartTwo
         Console.WriteLine("====== PART TWO ======");
         int loops = 0;
 
-        char[,] map = new char[lines[0].Length, lines.Length];
-
-        FillMap(lines, map);
+        var map = FillMap(lines, new char[lines[0].Length, lines.Length]);
 
         var startPosition = FindGuardPosition(map);
 
         if (!PositionIsValid(map, startPosition)) throw new Exception("Guard not found");
 
-        object lockObject = new();
-        Parallel.For(0, map.GetLength(0), x =>
+        Parallel.For(0, map.Width, x =>
         {
-            for (int y = 0; y < map.GetLength(1); y++)
+            for (int y = 0; y < map.Height; y++)
             {
-                if (map[x, y] == GuardSymbol || map[x, y] == BlockingSymbol) continue;
+                if (map.Span[x, y] == GuardSymbol || map.Span[x, y] == BlockingSymbol) continue;
 
-                var mapCopy = (char[,])map.Clone();
-                mapCopy[x, y] = BlockingSymbol;
-                var found = FindLoop(mapCopy, startPosition);
+                var found = FindLoop(map, startPosition, new(x, y));
 
-                if (found)
-                {
-                    lock (lockObject)
-                    {
-                        loops++;
-                    }
-                }
+                if (found) Interlocked.Increment(ref loops);
             }
         });
 
@@ -40,7 +30,7 @@ static class PartTwo
         Console.WriteLine("======================");
     }
 
-    static bool FindLoop(char[,] map, Position startPosition)
+    static bool FindLoop(ReadOnlyMemory2D<char> map, Position startPosition, Position blockPosition)
     {
         var guard = new Guard { Position = startPosition, Direction = new(0, -1) };
 
@@ -55,10 +45,26 @@ static class PartTwo
 
             visited.Add(current);
 
-            SetPosition(map, guard.Position, VisitedSymbol);
-            nextPosition = MoveGuard(map, guard);
+            nextPosition = MoveGuard(map, guard, blockPosition);
         } while (PositionIsValid(map, nextPosition));
 
         return false;
+    }
+
+    public static Position MoveGuard(ReadOnlyMemory2D<char> map, Guard guard, Position blockPosition)
+    {
+        var nextPosition = new Position(guard.Position.x + guard.Direction.x, guard.Position.y + guard.Direction.y);
+
+        if (!PositionIsValid(map, nextPosition)) return Position.Invalid;
+
+        if (!PositionIsFree(map, nextPosition) || nextPosition == blockPosition)
+        {
+            guard.Direction = new Direction(-guard.Direction.y, guard.Direction.x);
+            return guard.Position;
+        }
+
+        guard.Position = nextPosition;
+
+        return nextPosition;
     }
 }

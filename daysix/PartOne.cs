@@ -24,8 +24,6 @@ static class PartOne
             nextPosition = MoveGuard(map, guard);
         } while (PositionIsValid(map, nextPosition));
 
-        //PrintMap(map);
-
         var visited = CountVisited(map);
 
         Console.WriteLine($"Guard visited {visited} distinct positions");
