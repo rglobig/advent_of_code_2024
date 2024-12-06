@@ -24,7 +24,7 @@ static class Helper
         return nextPosition;
     }
 
-    public static int CountVisited(ReadOnlyMemory2D<char> map)
+    public static int CountVisited(ReadOnlyMemory2D<char> map, HashSet<Position> visited)
     {
         int count = 0;
         for (int x = 0; x < map.Width; x++)
@@ -34,6 +34,7 @@ static class Helper
                 if (map.Span[x, y] == VisitedSymbol)
                 {
                     count++;
+                    visited.Add(new Position(x, y));
                 }
             }
         }

@@ -3,7 +3,7 @@ using static Helper;
 
 static class PartTwo
 {
-    public static void CalculateAndPrint(string[] lines)
+    public static void CalculateAndPrint(string[] lines, HashSet<Position> visitedSet)
     {
         Console.WriteLine("====== PART TWO ======");
         int loops = 0;
@@ -19,16 +19,14 @@ static class PartTwo
             MaxDegreeOfParallelism = 4
         };
 
-        Parallel.For(0, map.Width, parallelOptions, x =>
+        visitedSet.Remove(startPosition);
+
+        var visited = visitedSet.ToArray();
+
+        Parallel.For(0, visited.Length, parallelOptions, i =>
         {
-            for (int y = 0; y < map.Height; y++)
-            {
-                if (map.Span[x, y] == GuardSymbol || map.Span[x, y] == BlockingSymbol) continue;
-
-                var found = FindLoop(map, startPosition, new(x, y));
-
-                if (found) Interlocked.Increment(ref loops);
-            }
+            var found = FindLoop(map, startPosition, visited[i]);
+            if (found) Interlocked.Increment(ref loops);
         });
 
         Console.WriteLine($"Found Loops: {loops}");

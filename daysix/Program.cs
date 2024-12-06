@@ -1,7 +1,7 @@
 ﻿var lines = File.ReadAllLines("input.txt");
 
-PartOne.CalculateAndPrint(lines);
-PartTwo.CalculateAndPrint(lines);
+var visited = PartOne.CalculateAndPrint(lines);
+PartTwo.CalculateAndPrint(lines, visited);
 
 class Guard
 {

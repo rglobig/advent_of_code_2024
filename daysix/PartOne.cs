@@ -2,7 +2,7 @@
 
 static class PartOne
 {
-    public static void CalculateAndPrint(string[] lines)
+    public static HashSet<Position> CalculateAndPrint(string[] lines)
     {
         Console.WriteLine("====== PART ONE ======");
 
@@ -24,9 +24,13 @@ static class PartOne
             nextPosition = MoveGuard(map, guard);
         } while (PositionIsValid(map, nextPosition));
 
-        var visited = CountVisited(map);
+        HashSet<Position> visitedMap = new();
+
+        var visited = CountVisited(map, visitedMap);
 
         Console.WriteLine($"Guard visited {visited} distinct positions");
         Console.WriteLine("======================");
+
+        return visitedMap;
     }
 }
