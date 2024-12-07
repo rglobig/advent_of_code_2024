@@ -7,38 +7,39 @@ List<Equation> equations = new(lines.Length);
 ParseLines(lines, equations);
 
 long sum = 0;
+bool print = false;
 
-foreach (var equation in equations)
+Parallel.ForEach(equations, new ParallelOptions { MaxDegreeOfParallelism = 4 }, CalculateEquation);
+
+Console.WriteLine($"Sum: {sum}");
+
+void CalculateEquation(Equation equation)
 {
-    int length = equation.Numbers.Length - 1;
-    int max = (int)Math.Pow(3, length);
-    List<string> combinations = new(max);
-
-    GenerateCombinations(string.Empty, length, combinations);
-
-    for (int i = 0; i < combinations.Count; i++)
+    int combinationLength = equation.Numbers.Length - 1;
+    var combinations = GenerateCombinations(combinationLength);
+    foreach (var combination in combinations)
     {
-        var combination = combinations[i];
         var workNumbers = (long[])equation.Numbers.Clone();
-
         var result = Calculate(combination, workNumbers);
-        if (result == equation.Result)
-        {
-            StringBuilder stringBuilder = new();
-            for (int j = 0; j < combination.Length; j++)
-            {
-                stringBuilder.Append(equation.Numbers[j]);
-                stringBuilder.Append(combination[j]);
-            }
-            stringBuilder.Append(equation.Numbers[^1]); 
-            Console.WriteLine($"Found Combination: {result}={stringBuilder}");
-            sum += equation.Result;
-            break;
-        }
+        if (result != equation.Result) continue;
+        Print(equation, combination, result);
+        Interlocked.Add(ref sum, equation.Result);
+        break;
     }
 }
 
-Console.WriteLine($"Sum: {sum}");
+void Print(Equation equation, string combination, long result)
+{
+    if (!print) return;
+    StringBuilder stringBuilder = new();
+    for (int j = 0; j < combination.Length; j++)
+    {
+        stringBuilder.Append(equation.Numbers[j]);
+        stringBuilder.Append(combination[j]);
+    }
+    stringBuilder.Append(equation.Numbers[^1]);
+    Console.WriteLine($"Found Combination: {result}={stringBuilder}");
+}
 
 static long Calculate(string combination, long[] numbers)
 {
@@ -47,34 +48,39 @@ static long Calculate(string combination, long[] numbers)
         long number = numbers[i];
         long nextNumber = numbers[i + 1];
         char operation = combination[i];
-        long tempResult = 0;
-        if (operation == '*')
+        long tempResult = operation switch
         {
-            tempResult = number * nextNumber;
-        }
-        else if (operation == '+')
-        {
-            tempResult = number + nextNumber;
-        }
-        else if (operation == '|')
-        {
-            tempResult = long.Parse(number.ToString() + nextNumber.ToString());
-        }
+            '*' => number * nextNumber,
+            '+' => number + nextNumber,
+            '|' => long.Parse(number.ToString() + nextNumber.ToString()),
+            _ => throw new InvalidOperationException("Invalid operation")
+        };
         numbers[i + 1] = tempResult;
     }
     return numbers[^1];
 }
 
-static void GenerateCombinations(string prefix, int length, List<string> combinations)
+static List<string> GenerateCombinations(int length)
 {
-    if (prefix.Length == length)
+    char[] ops = ['*', '+', '|'];
+    int baseValue = ops.Length;
+    int max = (int)Math.Pow(baseValue, length);
+
+    List<string> combinations = new(max);
+
+    for (int i = 0; i < max; i++)
     {
-        combinations.Add(prefix);
-        return;
+        StringBuilder sb = new(length);
+        int num = i;
+        for (int j = 0; j < length; j++)
+        {
+            sb.Append(ops[num % baseValue]);
+            num /= baseValue;
+        }
+        combinations.Add(sb.ToString());
     }
-    GenerateCombinations(prefix + "*", length, combinations);
-    GenerateCombinations(prefix + "+", length, combinations);
-    GenerateCombinations(prefix + "|", length, combinations);
+
+    return combinations;
 }
 
 static void ParseLines(string[] lines, List<Equation> equations)
