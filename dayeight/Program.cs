@@ -10,42 +10,58 @@ var antinodes = CreateAntinodesFromAntennaCombinations(antennaCombinations, grid
 
 Console.WriteLine($"There are {antinodes.Count} Antinodes on the Grid.");
 
-bool IsAntinodeInGrid(Antinode antinode, Grid grid)
+static bool IsAntinodeInGrid(Antinode antinode, Grid grid)
 {
     return antinode.Position.X >= 0 && antinode.Position.X < grid.Width && antinode.Position.Y >= 0 && antinode.Position.Y < grid.Height;
 }
 
-Dictionary<Vector2, Antinode> CreateAntinodesFromAntennaCombinations(ReadOnlyDictionary<char, List<AntennaCombination>> antennaCombinations, Grid grid)
+static Dictionary<Vector2, Antinode> CreateAntinodesFromAntennaCombinations(ReadOnlyDictionary<char, List<AntennaCombination>> antennaCombinations, Grid grid)
 {
     Dictionary<Vector2, Antinode> antinodes = [];
 
-    foreach(var group in antennaCombinations)
+    foreach (var group in antennaCombinations)
     {
         foreach (var combination in group.Value)
         {
-            var (a, b) = CalculateAntinodes(combination);
-            if (IsAntinodeInGrid(a, grid)) antinodes[a.Position] = a;
-            if (IsAntinodeInGrid(b, grid)) antinodes[b.Position] = b;
+            foreach (var antinode in CalculateAntinodes(combination, grid))
+            {
+                antinodes[antinode.Position] = antinode;
+            }
         }
     }
 
     return antinodes;
 }
 
-(Antinode a, Antinode b) CalculateAntinodes(AntennaCombination combination)
+static List<Antinode> CalculateAntinodes(AntennaCombination combination, Grid grid)
 {
+    List<Antinode> antinodes = [];
+
     var antennaA = combination.A;
     var antennaB = combination.B;
 
     var delta = new Vector2(antennaB.Position.X - antennaA.Position.X, antennaB.Position.Y - antennaA.Position.Y);
 
     var antinodeAPosition = new Vector2(antennaA.Position.X - delta.X, antennaA.Position.Y - delta.Y);
+
+    while (IsAntinodeInGrid(new Antinode(antinodeAPosition), grid))
+    {
+        antinodes.Add(new Antinode(antinodeAPosition));
+        antinodeAPosition = new Vector2(antinodeAPosition.X - delta.X, antinodeAPosition.Y - delta.Y);
+    }
+
     var antinodeBPosition = new Vector2(antennaB.Position.X + delta.X, antennaB.Position.Y + delta.Y);
 
-    var antinodeA = new Antinode(antinodeAPosition);
-    var antinodeB = new Antinode(antinodeBPosition);
+    while (IsAntinodeInGrid(new Antinode(antinodeBPosition), grid))
+    {
+        antinodes.Add(new Antinode(antinodeBPosition));
+        antinodeBPosition = new Vector2(antinodeBPosition.X + delta.X, antinodeBPosition.Y + delta.Y);
+    }
 
-    return (antinodeA, antinodeB);
+    antinodes.Add(new Antinode(new Vector2(antennaA.Position.X, antennaA.Position.Y)));
+    antinodes.Add(new Antinode(new Vector2(antennaB.Position.X, antennaB.Position.Y)));
+
+    return antinodes;
 }
 
 static ReadOnlyDictionary<char, List<Antenna>> ParseDataIntoAntennaGroups(string[] lines)
